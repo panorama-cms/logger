@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -24,6 +25,13 @@ var IncludeStep = false
 
 var LogRequestsSeparately = false
 var HideRequestsFromMainLog = false
+
+var MinimumLogLevel = LevelWarning
+
+var debug = false
+var info = false
+var warning = false
+var error = false
 
 // init sets some default values by reading the environment variables.
 // The following environment variables are supported:
@@ -61,6 +69,18 @@ func init() {
 	hideRequestsFromMainLogTemp = strings.TrimSpace(hideRequestsFromMainLogTemp)
 	if hideRequestsFromMainLogTemp == "true" {
 		HideRequestsFromMainLog = true
+	}
+
+	minimumLogLevelTemp := os.Getenv("LOGGER_MINIMUM_LOG_LEVEL")
+	minimumLogLevelTemp = strings.TrimSpace(minimumLogLevelTemp)
+	if minimumLogLevelTemp != "" {
+		if minimumLogLevelTemp == LevelDebug ||
+			minimumLogLevelTemp == LevelInfo ||
+			minimumLogLevelTemp == LevelWarning ||
+			minimumLogLevelTemp == LevelError ||
+			minimumLogLevelTemp == LevelFatal {
+			MinimumLogLevel = minimumLogLevelTemp
+		}
 	}
 
 	// check if logs directory exists, if not create it
@@ -177,6 +197,10 @@ func l(level string, content string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	if level == LevelFatal {
+		panic(content)
+	}
 }
 
 // Log logs a message with the given log level.
@@ -191,42 +215,58 @@ func LogAsync(level string, content string) {
 
 // Debug logs a debug message.
 func Debug(content string) {
+	if !debug {
+		return
+	}
+
 	l(LevelDebug, content)
 }
 
 // DebugAsync logs a debug message asynchronously by calling logger.l as goroutine.
 func DebugAsync(content string) {
-	go l(LevelDebug, content)
+	go Debug(content)
 }
 
 // Info logs an info message.
 func Info(content string) {
+	if !info {
+		return
+	}
+
 	l(LevelInfo, content)
 }
 
 // InfoAsync logs an info message asynchronously by calling logger.l as goroutine.
 func InfoAsync(content string) {
-	go l(LevelInfo, content)
+	go Info(content)
 }
 
 // Warning logs a warning message.
 func Warning(content string) {
+	if !warning {
+		return
+	}
+
 	l(LevelWarning, content)
 }
 
 // WarningAsync logs a warning message asynchronously by calling logger.l as goroutine.
 func WarningAsync(content string) {
-	go l(LevelWarning, content)
+	go Warning(content)
 }
 
 // Error logs an error message.
 func Error(content string) {
+	if !error {
+		return
+	}
+
 	l(LevelError, content)
 }
 
 // ErrorAsync logs an error message asynchronously by calling logger.l as goroutine.
 func ErrorAsync(content string) {
-	go l(LevelError, content)
+	go Error(content)
 }
 
 // Fatal logs a fatal message.
@@ -236,10 +276,11 @@ func Fatal(content string) {
 
 // FatalAsync logs a fatal message asynchronously by calling logger.l as goroutine.
 func FatalAsync(content string) {
-	go l(LevelFatal, content)
+	go Fatal(content)
 }
 
 // LogRequest logs a request.
+// This is mainly used by Panorama.
 // If HideRequestsFromMainLog is true, the request will not be logged to the main log file but only when LogRequestsSeparately is true.
 func LogRequest(method string, path string, userAgent string, ip string) {
 	if (!LogRequestsSeparately) || (LogRequestsSeparately && !HideRequestsFromMainLog) {
@@ -273,4 +314,62 @@ func LogRequest(method string, path string, userAgent string, ip string) {
 			log.Fatal(err)
 		}
 	}
+}
+
+func SetMinimumLogLevel(level string) {
+	if in_array(level, []string{LevelDebug, LevelInfo, LevelWarning, LevelError, LevelFatal}) {
+		determineLogLevel()
+	}
+}
+
+func determineLogLevel() {
+	if MinimumLogLevel == LevelDebug {
+		debug = true
+		info = true
+		warning = true
+		error = true
+	}
+
+	if MinimumLogLevel == LevelInfo {
+		debug = false
+		info = true
+		warning = true
+		error = true
+	}
+
+	if MinimumLogLevel == LevelWarning {
+		debug = false
+		info = false
+		warning = true
+		error = true
+	}
+
+	if MinimumLogLevel == LevelError {
+		debug = false
+		info = false
+		warning = false
+		error = true
+	}
+
+	if MinimumLogLevel == LevelFatal {
+		debug = false
+		info = false
+		warning = false
+		error = false
+	}
+}
+
+func in_array(val interface{}, array interface{}) bool {
+	switch reflect.TypeOf(array).Kind() {
+	case reflect.Slice:
+		s := reflect.ValueOf(array)
+
+		for i := 0; i < s.Len(); i++ {
+			if reflect.DeepEqual(val, s.Index(i).Interface()) == true {
+				return true
+			}
+		}
+	}
+
+	return false
 }
