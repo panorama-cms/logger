@@ -31,7 +31,7 @@ var MinimumLogLevel = LevelWarning
 var debug = false
 var info = false
 var warning = false
-var error = false
+var err = false
 
 // init sets some default values by reading the environment variables.
 // The following environment variables are supported:
@@ -255,16 +255,16 @@ func WarningAsync(content string) {
 	go Warning(content)
 }
 
-// Error logs an error message.
+// Error logs an err message.
 func Error(content string) {
-	if !error {
+	if !err {
 		return
 	}
 
 	l(LevelError, content)
 }
 
-// ErrorAsync logs an error message asynchronously by calling logger.l as goroutine.
+// ErrorAsync logs an err message asynchronously by calling logger.l as goroutine.
 func ErrorAsync(content string) {
 	go Error(content)
 }
@@ -279,10 +279,10 @@ func FatalAsync(content string) {
 	go Fatal(content)
 }
 
-// LogRequest logs a request.
+// LogSimpleRequest logs a request.
 // This is mainly used by Panorama.
 // If HideRequestsFromMainLog is true, the request will not be logged to the main log file but only when LogRequestsSeparately is true.
-func LogRequest(method string, path string, userAgent string, ip string) {
+func LogSimpleRequest(method string, path string, userAgent string, ip string) {
 	if (!LogRequestsSeparately) || (LogRequestsSeparately && !HideRequestsFromMainLog) {
 		Log(LevelInfo, fmt.Sprintf("(%s) %s <- %s @ %s", method, path, userAgent, ip))
 	}
@@ -298,7 +298,7 @@ func LogRequest(method string, path string, userAgent string, ip string) {
 		tFormatted := t.Format("2006-01-02 15:04:05.000000")
 
 		// open file requests.csv
-		f, err := os.OpenFile(LogDir+"/requests-"+date+".csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		f, err := os.OpenFile(LogDir+"/requests-simple-"+date+".csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -327,35 +327,35 @@ func determineLogLevel() {
 		debug = true
 		info = true
 		warning = true
-		error = true
+		err = true
 	}
 
 	if MinimumLogLevel == LevelInfo {
 		debug = false
 		info = true
 		warning = true
-		error = true
+		err = true
 	}
 
 	if MinimumLogLevel == LevelWarning {
 		debug = false
 		info = false
 		warning = true
-		error = true
+		err = true
 	}
 
 	if MinimumLogLevel == LevelError {
 		debug = false
 		info = false
 		warning = false
-		error = true
+		err = true
 	}
 
 	if MinimumLogLevel == LevelFatal {
 		debug = false
 		info = false
 		warning = false
-		error = false
+		err = false
 	}
 }
 
