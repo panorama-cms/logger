@@ -89,7 +89,7 @@ func (r *Request) ToCSV() string {
 		strconv.FormatUint(r.ConnectionSeq, 10) + "\n"
 }
 
-func LogRequestFromFiber(c *fiber.Ctx) {
+func LogRequestFromFiber(c fiber.Ctx) {
 	// Create a new request
 	req := New()
 
