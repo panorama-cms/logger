@@ -94,7 +94,7 @@ func LogRequestFromFiber(c *fiber.Ctx) {
 	req := New()
 
 	// Set the connection time
-	req.ConnectionTime = c.Context().ConnTime().String()
+	req.ConnectionTime = time.Now().String()
 
 	// Set the method
 	req.Method = c.Method()
