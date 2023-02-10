@@ -70,9 +70,9 @@ func GetCSVHeader() []string {
 		"address",
 		"user_agent",
 		"referer",
+		"requested_host",
 		"connection_id",
 		"connection_seq",
-		"requested_host",
 	}
 }
 
