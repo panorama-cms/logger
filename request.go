@@ -142,8 +142,29 @@ func LogRequest(req *Request) {
 		// format time to HH:MM:SS
 		//tFormatted := t.Format("2006-01-02 15:04:05.000000")
 
+		filename := LogDir + "/requests-" + date + ".csv"
+
+		// Add the header if the file doesn't exist
+		if _, err := os.Stat(filename); os.IsNotExist(err) {
+			// Create the file
+			file, err := os.Create(filename)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			// Write the header
+			_, err = file.WriteString(strings.Join(GetCSVHeader(), ",") + "\n")
+			if err != nil {
+				log.Fatal(err)
+			}
+			err = file.Close()
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
 		// open file requests.csv
-		f, err := os.OpenFile(LogDir+"/requests-"+date+".csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			log.Fatal(err)
 		}
