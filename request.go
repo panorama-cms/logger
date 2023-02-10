@@ -94,7 +94,11 @@ func LogRequestFromFiber(c *fiber.Ctx) {
 	req := New()
 
 	// Set the connection time
-	req.ConnectionTime = time.Now().String()
+	connTime := time.Now().String()
+	if c.Context() != nil {
+		connTime = c.Context().ConnTime().String()
+	}
+	req.ConnectionTime = connTime
 
 	// Set the method
 	req.Method = c.Method()
@@ -103,10 +107,18 @@ func LogRequestFromFiber(c *fiber.Ctx) {
 	req.Path = c.Path()
 
 	// Set the IP
-	req.IP = c.IP()
+	ip := c.IP()
+	if len(c.IPs()) > 0 {
+		ip = c.IPs()[0]
+	}
+	req.IP = ip
 
 	// Set the address
-	req.Address = c.Context().RemoteAddr().String()
+	remoteAddr := c.IP()
+	if c.Context() != nil {
+		remoteAddr = c.Context().RemoteAddr().String()
+	}
+	req.Address = remoteAddr
 
 	// Set the user agent
 	req.UserAgent = c.Get(fiber.HeaderUserAgent)
