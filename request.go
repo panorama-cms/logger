@@ -185,16 +185,36 @@ func LogRequestFromFiber(c fiber.Ctx) {
 			log.Fatal(err)
 		}
 
-		req.Continent = record.Continent.Names["en"]
-		req.Country = record.Country.Names["en"]
+		continent := "Unknown"
+		if record.Continent.Names["en"] != "" {
+			continent = record.Continent.Names["en"]
+		}
+		req.Continent = continent
+
+		country := "Unknown"
+		if record.Country.Names["en"] != "" {
+			country = record.Country.Names["en"]
+		}
+		req.Country = country
+
 		req.CountryCode = record.Country.IsoCode
 		req.City = record.City.Names["en"]
 		req.Latitude = record.Location.Latitude
 		req.Longitude = record.Location.Longitude
 		req.Timezone = record.Location.TimeZone
 		req.PostalCode = record.Postal.Code
-		req.Subdivision = record.Subdivisions[0].Names["en"]
-		req.SubdivisionCode = record.Subdivisions[0].IsoCode
+
+		subdivision := "Unknown"
+		if len(record.Subdivisions) > 0 && record.Subdivisions[0].Names["en"] != "" {
+			subdivision = record.Subdivisions[0].Names["en"]
+		}
+		req.Subdivision = subdivision
+
+		subdivisionCode := "Unknown"
+		if len(record.Subdivisions) > 0 && record.Subdivisions[0].IsoCode != "" {
+			subdivisionCode = record.Subdivisions[0].IsoCode
+		}
+		req.SubdivisionCode = subdivisionCode
 	}
 
 	// Set the address
