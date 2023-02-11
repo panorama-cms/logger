@@ -115,6 +115,16 @@ func GetCSVHeader() []string {
 		"user_agent",
 		"referer",
 		"requested_host",
+		"continent",
+		"country",
+		"country_code",
+		"city",
+		"latitude",
+		"longitude",
+		"timezone",
+		"postal_code",
+		"subdivision",
+		"subdivision_code",
 		"connection_id",
 		"connection_seq",
 	}
@@ -129,6 +139,16 @@ func (r *Request) ToCSV() string {
 		r.UserAgent + "," +
 		r.Referer + "," +
 		r.RequestedHost + "," +
+		r.Continent + "," +
+		r.Country + "," +
+		r.CountryCode + "," +
+		r.City + "," +
+		fmt.Sprintf("%.12f", r.Latitude) + "," +
+		fmt.Sprintf("%.12f", r.Longitude) + "," +
+		r.Timezone + "," +
+		r.PostalCode + "," +
+		r.Subdivision + "," +
+		r.SubdivisionCode + "," +
 		strconv.FormatUint(r.ConnectionID, 10) + "," +
 		strconv.FormatUint(r.ConnectionSeq, 10) + "\n"
 }
