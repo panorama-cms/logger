@@ -4,12 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/oschwald/geoip2-golang"
 	"log"
+	"net"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 )
+
+var GeoIPDB *geoip2.Reader
 
 type Request struct {
 	// ConnectionTime is the connection time of the client.
@@ -51,6 +55,46 @@ type Request struct {
 	// RequestedHost is the requested host of the client.
 	// See https://pkg.go.dev/github.com/valyala/fasthttp#RequestCtx.Host
 	RequestedHost string `json:"requested_host"`
+
+	// Continent is the continent of the client.
+	// Examples: Europe, North America, Asia, Africa, Oceania, Antarctica
+	Continent string `json:"continent"`
+
+	// Country is the country of the client.
+	// Examples: Germany, United States, United Kingdom, France, Japan, China
+	Country string `json:"country"`
+
+	// CountryCode is the country code of the client.
+	// Examples: DE, US, GB, FR, JP, CN
+	CountryCode string `json:"country_code"`
+
+	// City is the city of the client.
+	// Examples: Berlin, New York, London, Paris, Tokyo, Shanghai
+	City string `json:"city"`
+
+	// Latitude is the latitude of the client.
+	// Examples: 52.520008, 40.712776, 51.507351, 48.856613, 35.689487, 31.230416
+	Latitude float64 `json:"latitude"`
+
+	// Longitude is the longitude of the client.
+	// Examples: 13.404954, -74.005974, -0.127758, 2.352222, 139.691706, 121.473701
+	Longitude float64 `json:"longitude"`
+
+	// Timezone is the timezone of the client.
+	// Examples: Europe/Berlin, America/New_York, Europe/London, Europe/Paris, Asia/Tokyo, Asia/Shanghai
+	Timezone string `json:"timezone"`
+
+	// PostalCode is the postal code of the client.
+	// Examples: 10115, 10001, SW1A 2AA, 75001, 100-0005, 200001
+	PostalCode string `json:"postal_code"`
+
+	// Subdivision is the subdivision of the client.
+	// Examples: Berlin, New York, England, Île-de-France, Tokyo, Shanghai
+	Subdivision string `json:"subdivision"`
+
+	// SubdivisionCode is the subdivision code of the client.
+	// Examples: BE, NY, ENG, IDF, 13, 31
+	SubdivisionCode string `json:"subdivision_code"`
 }
 
 func New() *Request {
@@ -107,11 +151,31 @@ func LogRequestFromFiber(c fiber.Ctx) {
 	req.Path = c.Path()
 
 	// Set the IP
+	var rawIP net.IP
 	ip := c.IP()
 	if len(c.IPs()) > 0 {
 		ip = c.IPs()[0]
 	}
 	req.IP = ip
+	rawIP = net.ParseIP(ip)
+
+	if GeoIPDB != nil {
+		record, err := GeoIPDB.City(rawIP)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		req.Continent = record.Continent.Names["en"]
+		req.Country = record.Country.Names["en"]
+		req.CountryCode = record.Country.IsoCode
+		req.City = record.City.Names["en"]
+		req.Latitude = record.Location.Latitude
+		req.Longitude = record.Location.Longitude
+		req.Timezone = record.Location.TimeZone
+		req.PostalCode = record.Postal.Code
+		req.Subdivision = record.Subdivisions[0].Names["en"]
+		req.SubdivisionCode = record.Subdivisions[0].IsoCode
+	}
 
 	// Set the address
 	remoteAddr := c.IP()
