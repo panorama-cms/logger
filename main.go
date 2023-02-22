@@ -11,9 +11,23 @@ import (
 
 const LevelDebug = "DEBUG"
 const LevelInfo = "INFO"
+const LevelNotice = "NOTICE"
 const LevelWarning = "WARNING"
 const LevelError = "ERROR"
+const LevelEmergency = "EMERGENCY"
 const LevelFatal = "FATAL"
+
+var LevelWeights = map[string]int{
+	LevelDebug:     0,
+	LevelInfo:      1,
+	LevelNotice:    2,
+	LevelWarning:   3,
+	LevelError:     4,
+	LevelEmergency: 5,
+	LevelFatal:     6,
+}
+
+var levelWeight int
 
 var LogDir = "./logs"
 var logDirExists = false
@@ -26,12 +40,7 @@ var IncludeStep = false
 var LogRequestsSeparately = false
 var HideRequestsFromMainLog = false
 
-var MinimumLogLevel = LevelWarning
-
-var debug = false
-var info = false
-var warning = false
-var err = false
+var MinimumLogLevel = LevelNotice
 
 // init sets some default values by reading the environment variables.
 // The following environment variables are supported:
@@ -86,12 +95,11 @@ func init() {
 		minimumLogLevelTemp = strings.TrimSpace(minimumLogLevelTemp)
 		if minimumLogLevelTemp != "" {
 			minimumLogLevelTemp = strings.ToUpper(minimumLogLevelTemp)
-			if minimumLogLevelTemp == LevelDebug ||
-				minimumLogLevelTemp == LevelInfo ||
-				minimumLogLevelTemp == LevelWarning ||
-				minimumLogLevelTemp == LevelError ||
-				minimumLogLevelTemp == LevelFatal {
-				MinimumLogLevel = minimumLogLevelTemp
+			for key := range LevelWeights {
+				if key == minimumLogLevelTemp {
+					MinimumLogLevel = minimumLogLevelTemp
+					break
+				}
 			}
 		}
 	}
@@ -105,6 +113,9 @@ func init() {
 		}
 		logDirExists = true
 	}
+
+	// set level weights
+	levelWeight = LevelWeights[MinimumLogLevel]
 }
 
 // microTime returns the current time in microseconds.
@@ -141,10 +152,16 @@ func formatMicroTimeDuration(duration float64) string {
 // It logs the given content to the main log file.
 // It's internal and should not be used directly because we provide wrapper functions for each log level below.
 func l(level string, content string) {
-	if level == "" {
-		level = LevelInfo
-	} else if level != LevelDebug && level != LevelInfo && level != LevelWarning && level != LevelError && level != LevelFatal {
-		level = LevelInfo
+	// check if level is one of the supported levels
+	if _, ok := LevelWeights[level]; !ok {
+		log.Println("LOGGER: Invalid log level: " + level)
+		return
+	}
+
+	// check if level is allowed
+	if levelWeight < LevelWeights[level] {
+		log.Println("LOGGER: Log level not allowed: " + level)
+		return
 	}
 
 	if !logDirExists {
@@ -228,7 +245,7 @@ func LogAsync(level string, content string) {
 
 // Debug logs a debug message.
 func Debug(content string) {
-	if !debug {
+	if levelWeight > LevelWeights[LevelDebug] {
 		log.Println("Debug mode is disabled. To enable it set the minimum log level to debug.")
 		return
 	}
@@ -243,7 +260,7 @@ func DebugAsync(content string) {
 
 // Info logs an info message.
 func Info(content string) {
-	if !info {
+	if levelWeight > LevelWeights[LevelInfo] {
 		log.Println("Info mode is disabled. To enable it set the minimum log level to info.")
 		return
 	}
@@ -258,7 +275,7 @@ func InfoAsync(content string) {
 
 // Warning logs a warning message.
 func Warning(content string) {
-	if !warning {
+	if levelWeight > LevelWeights[LevelWarning] {
 		log.Println("Warning mode is disabled. To enable it set the minimum log level to warning.")
 		return
 	}
@@ -273,7 +290,7 @@ func WarningAsync(content string) {
 
 // Error logs an err message.
 func Error(content string) {
-	if !err {
+	if levelWeight > LevelWeights[LevelError] {
 		log.Println("Error mode is disabled. To enable it set the minimum log level to error.")
 		return
 	}
@@ -331,49 +348,6 @@ func LogSimpleRequest(method string, path string, userAgent string, ip string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-	}
-}
-
-func SetMinimumLogLevel(level string) {
-	if in_array(level, []string{LevelDebug, LevelInfo, LevelWarning, LevelError, LevelFatal}) {
-		determineLogLevel()
-	}
-}
-
-func determineLogLevel() {
-	if MinimumLogLevel == LevelDebug {
-		debug = true
-		info = true
-		warning = true
-		err = true
-	}
-
-	if MinimumLogLevel == LevelInfo {
-		debug = false
-		info = true
-		warning = true
-		err = true
-	}
-
-	if MinimumLogLevel == LevelWarning {
-		debug = false
-		info = false
-		warning = true
-		err = true
-	}
-
-	if MinimumLogLevel == LevelError {
-		debug = false
-		info = false
-		warning = false
-		err = true
-	}
-
-	if MinimumLogLevel == LevelFatal {
-		debug = false
-		info = false
-		warning = false
-		err = false
 	}
 }
 
