@@ -169,7 +169,7 @@ func l(level string, content string) {
 	}
 
 	// check if level is allowed
-	if levelWeight < LevelWeights[level] {
+	if levelWeight > LevelWeights[level] {
 		log.Println("LOGGER: Log level not allowed: " + level)
 		log.Printf("LOGGER: Level weight of minimum log level: %d, level weight of selected level: %d\n", levelWeight, LevelWeights[level])
 		return
