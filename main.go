@@ -40,7 +40,7 @@ var IncludeStep = false
 var LogRequestsSeparately = false
 var HideRequestsFromMainLog = false
 
-var MinimumLogLevel = LevelNotice
+var minimumLogLevel = LevelNotice
 
 // init sets some default values by reading the environment variables.
 // The following environment variables are supported:
@@ -104,7 +104,7 @@ func init() {
 			minimumLogLevelTemp = strings.ToUpper(minimumLogLevelTemp)
 			for key := range LevelWeights {
 				if key == minimumLogLevelTemp {
-					MinimumLogLevel = minimumLogLevelTemp
+					minimumLogLevel = minimumLogLevelTemp
 					break
 				}
 			}
@@ -123,9 +123,26 @@ func init() {
 	}
 
 	// set level weights
-	levelWeight = LevelWeights[MinimumLogLevel]
-	log.Println("LOGGER: Minimum log level is: " + MinimumLogLevel)
+	levelWeight = LevelWeights[minimumLogLevel]
+	log.Println("LOGGER: Minimum log level is: " + minimumLogLevel)
 	log.Printf("LOGGER: Known log level weights are: %v", LevelWeights)
+}
+
+func SetMinimumLogLevel(level string) {
+	level = strings.ToUpper(level)
+	found := false
+	for key := range LevelWeights {
+		if key == level {
+			minimumLogLevel = level
+			levelWeight = LevelWeights[level]
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		SetMinimumLogLevel(LevelNotice)
+	}
 }
 
 // microTime returns the current time in microseconds.
