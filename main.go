@@ -52,6 +52,7 @@ var MinimumLogLevel = LevelNotice
 func init() {
 	logDirTemp, logDirIsSet := os.LookupEnv("LOGGER_LOG_DIR")
 	if logDirIsSet {
+		log.Println("LOGGER: Using log directory from environment variable: " + logDirTemp)
 		logDirTemp = strings.TrimSpace(logDirTemp)
 		if logDirTemp != "" {
 			LogDir = logDirTemp
@@ -60,6 +61,7 @@ func init() {
 
 	includeRuntimeTemp, includeRuntimeIsSet := os.LookupEnv("LOGGER_INCLUDE_RUNTIME")
 	if includeRuntimeIsSet {
+		log.Println("LOGGER: Using include runtime from environment variable: " + includeRuntimeTemp)
 		includeRuntimeTemp = strings.TrimSpace(includeRuntimeTemp)
 		if includeRuntimeTemp == "true" {
 			IncludeRuntime = true
@@ -68,6 +70,7 @@ func init() {
 
 	includeStepTemp, includeStepIsSet := os.LookupEnv("LOGGER_INCLUDE_STEP")
 	if includeStepIsSet {
+		log.Println("LOGGER: Using include step from environment variable: " + includeStepTemp)
 		includeStepTemp = strings.TrimSpace(includeStepTemp)
 		if includeStepTemp == "true" {
 			IncludeStep = true
@@ -76,6 +79,7 @@ func init() {
 
 	logRequestsSeparatelyTemp, logRequestsSeparatelyIsSet := os.LookupEnv("LOGGER_LOG_REQUESTS_SEPARATELY")
 	if logRequestsSeparatelyIsSet {
+		log.Println("LOGGER: Using log requests separately from environment variable: " + logRequestsSeparatelyTemp)
 		logRequestsSeparatelyTemp = strings.TrimSpace(logRequestsSeparatelyTemp)
 		if logRequestsSeparatelyTemp == "true" {
 			LogRequestsSeparately = true
@@ -84,6 +88,7 @@ func init() {
 
 	hideRequestsFromMainLogTemp, hideRequestsFromMainLogIsSet := os.LookupEnv("LOGGER_HIDE_REQUESTS_FROM_MAIN_LOG")
 	if hideRequestsFromMainLogIsSet {
+		log.Println("LOGGER: Using hide requests from main log from environment variable: " + hideRequestsFromMainLogTemp)
 		hideRequestsFromMainLogTemp = strings.TrimSpace(hideRequestsFromMainLogTemp)
 		if hideRequestsFromMainLogTemp == "true" {
 			HideRequestsFromMainLog = true
@@ -92,8 +97,10 @@ func init() {
 
 	minimumLogLevelTemp, minimumLogLevelIsSet := os.LookupEnv("LOGGER_MINIMUM_LOG_LEVEL")
 	if minimumLogLevelIsSet {
+		log.Println("LOGGER: Using minimum log level from environment variable: " + minimumLogLevelTemp)
 		minimumLogLevelTemp = strings.TrimSpace(minimumLogLevelTemp)
 		if minimumLogLevelTemp != "" {
+			log.Println("LOGGER: Setting minimum log level to: " + minimumLogLevelTemp)
 			minimumLogLevelTemp = strings.ToUpper(minimumLogLevelTemp)
 			for key := range LevelWeights {
 				if key == minimumLogLevelTemp {
@@ -111,11 +118,14 @@ func init() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		log.Println("LOGGER: Created log directory: " + LogDir)
 		logDirExists = true
 	}
 
 	// set level weights
 	levelWeight = LevelWeights[MinimumLogLevel]
+	log.Println("LOGGER: Minimum log level is: " + MinimumLogLevel)
+	log.Printf("LOGGER: Known log level weights are: %v", LevelWeights)
 }
 
 // microTime returns the current time in microseconds.
@@ -161,6 +171,7 @@ func l(level string, content string) {
 	// check if level is allowed
 	if levelWeight < LevelWeights[level] {
 		log.Println("LOGGER: Log level not allowed: " + level)
+		log.Printf("LOGGER: Level weight of minimum log level: %d, level weight of selected level: %d\n", levelWeight, LevelWeights[level])
 		return
 	}
 
