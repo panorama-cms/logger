@@ -41,45 +41,58 @@ var err = false
 // LOGGER_LOG_REQUESTS_SEPARATELY: If set to true, the requests are logged in a separate file. Default: false
 // LOGGER_HIDE_REQUESTS_FROM_MAIN_LOG: If set to true, the requests are not logged in the main log file. Default: false
 func init() {
-	logDirTemp := os.Getenv("LOGGER_LOG_DIR")
-	logDirTemp = strings.TrimSpace(logDirTemp)
-	if logDirTemp != "" {
-		LogDir = logDirTemp
+	logDirTemp, logDirIsSet := os.LookupEnv("LOGGER_LOG_DIR")
+	if logDirIsSet {
+		logDirTemp = strings.TrimSpace(logDirTemp)
+		if logDirTemp != "" {
+			LogDir = logDirTemp
+		}
 	}
 
-	includeRuntimeTemp := os.Getenv("LOGGER_INCLUDE_RUNTIME")
-	includeRuntimeTemp = strings.TrimSpace(includeRuntimeTemp)
-	if includeRuntimeTemp == "true" {
-		IncludeRuntime = true
+	includeRuntimeTemp, includeRuntimeIsSet := os.LookupEnv("LOGGER_INCLUDE_RUNTIME")
+	if includeRuntimeIsSet {
+		includeRuntimeTemp = strings.TrimSpace(includeRuntimeTemp)
+		if includeRuntimeTemp == "true" {
+			IncludeRuntime = true
+		}
 	}
 
-	includeStepTemp := os.Getenv("LOGGER_INCLUDE_STEP")
-	includeStepTemp = strings.TrimSpace(includeStepTemp)
-	if includeStepTemp == "true" {
-		IncludeStep = true
+	includeStepTemp, includeStepIsSet := os.LookupEnv("LOGGER_INCLUDE_STEP")
+	if includeStepIsSet {
+		includeStepTemp = strings.TrimSpace(includeStepTemp)
+		if includeStepTemp == "true" {
+			IncludeStep = true
+		}
 	}
 
-	logRequestsSeparatelyTemp := os.Getenv("LOGGER_LOG_REQUESTS_SEPARATELY")
-	logRequestsSeparatelyTemp = strings.TrimSpace(logRequestsSeparatelyTemp)
-	if logRequestsSeparatelyTemp == "true" {
-		LogRequestsSeparately = true
+	logRequestsSeparatelyTemp, logRequestsSeparatelyIsSet := os.LookupEnv("LOGGER_LOG_REQUESTS_SEPARATELY")
+	if logRequestsSeparatelyIsSet {
+		logRequestsSeparatelyTemp = strings.TrimSpace(logRequestsSeparatelyTemp)
+		if logRequestsSeparatelyTemp == "true" {
+			LogRequestsSeparately = true
+		}
 	}
 
-	hideRequestsFromMainLogTemp := os.Getenv("LOGGER_HIDE_REQUESTS_FROM_MAIN_LOG")
-	hideRequestsFromMainLogTemp = strings.TrimSpace(hideRequestsFromMainLogTemp)
-	if hideRequestsFromMainLogTemp == "true" {
-		HideRequestsFromMainLog = true
+	hideRequestsFromMainLogTemp, hideRequestsFromMainLogIsSet := os.LookupEnv("LOGGER_HIDE_REQUESTS_FROM_MAIN_LOG")
+	if hideRequestsFromMainLogIsSet {
+		hideRequestsFromMainLogTemp = strings.TrimSpace(hideRequestsFromMainLogTemp)
+		if hideRequestsFromMainLogTemp == "true" {
+			HideRequestsFromMainLog = true
+		}
 	}
 
-	minimumLogLevelTemp := os.Getenv("LOGGER_MINIMUM_LOG_LEVEL")
-	minimumLogLevelTemp = strings.TrimSpace(minimumLogLevelTemp)
-	if minimumLogLevelTemp != "" {
-		if minimumLogLevelTemp == LevelDebug ||
-			minimumLogLevelTemp == LevelInfo ||
-			minimumLogLevelTemp == LevelWarning ||
-			minimumLogLevelTemp == LevelError ||
-			minimumLogLevelTemp == LevelFatal {
-			MinimumLogLevel = minimumLogLevelTemp
+	minimumLogLevelTemp, minimumLogLevelIsSet := os.LookupEnv("LOGGER_MINIMUM_LOG_LEVEL")
+	if minimumLogLevelIsSet {
+		minimumLogLevelTemp = strings.TrimSpace(minimumLogLevelTemp)
+		if minimumLogLevelTemp != "" {
+			minimumLogLevelTemp = strings.ToUpper(minimumLogLevelTemp)
+			if minimumLogLevelTemp == LevelDebug ||
+				minimumLogLevelTemp == LevelInfo ||
+				minimumLogLevelTemp == LevelWarning ||
+				minimumLogLevelTemp == LevelError ||
+				minimumLogLevelTemp == LevelFatal {
+				MinimumLogLevel = minimumLogLevelTemp
+			}
 		}
 	}
 
@@ -216,6 +229,7 @@ func LogAsync(level string, content string) {
 // Debug logs a debug message.
 func Debug(content string) {
 	if !debug {
+		log.Println("Debug mode is disabled. To enable it set the minimum log level to debug.")
 		return
 	}
 
@@ -230,6 +244,7 @@ func DebugAsync(content string) {
 // Info logs an info message.
 func Info(content string) {
 	if !info {
+		log.Println("Info mode is disabled. To enable it set the minimum log level to info.")
 		return
 	}
 
@@ -244,6 +259,7 @@ func InfoAsync(content string) {
 // Warning logs a warning message.
 func Warning(content string) {
 	if !warning {
+		log.Println("Warning mode is disabled. To enable it set the minimum log level to warning.")
 		return
 	}
 
@@ -258,6 +274,7 @@ func WarningAsync(content string) {
 // Error logs an err message.
 func Error(content string) {
 	if !err {
+		log.Println("Error mode is disabled. To enable it set the minimum log level to error.")
 		return
 	}
 
@@ -272,6 +289,7 @@ func ErrorAsync(content string) {
 // Fatal logs a fatal message.
 func Fatal(content string) {
 	l(LevelFatal, content)
+	log.Fatal(content)
 }
 
 // FatalAsync logs a fatal message asynchronously by calling logger.l as goroutine.
