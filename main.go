@@ -1,8 +1,6 @@
 package logger
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -45,12 +43,7 @@ var HideRequestsFromMainLog = false
 
 var minimumLogLevel = LevelNotice
 
-// SendLogsToForeignLogger says if the logs should be sent to a foreign logger.
-// If this is set to true, the logs are sent to the defined logger after they are written to the log file.
-var SendLogsToForeignLogger = false
-
-// ForeignLoggerHost is the logger that is used if SendLogsToForeignLogger is set to true.
-var ForeignLoggerHost = ""
+var Component = ""
 
 // init sets some default values by reading the environment variables.
 // The following environment variables are supported:
@@ -259,6 +252,10 @@ func l(level string, content string) {
 		entry += "[" + stepFormatted + "]"
 	}
 
+	if Component != "" {
+		entry += "[" + Component + "]"
+	}
+
 	entry += " " + level + " " + content + "\n"
 
 	// write to file
@@ -271,52 +268,6 @@ func l(level string, content string) {
 	err = f.Close()
 	if err != nil {
 		log.Fatal(err)
-	}
-
-	if SendLogsToForeignLogger {
-		if ForeignLoggerHost != "" {
-
-			// create http client
-			client := createHttpClient()
-
-			// build request data
-			data := map[string]string{
-				"level":   level,
-				"content": content,
-			}
-
-			// convert data to json
-			jsonData, err := json.Marshal(data)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			// create request
-			req, err := http.NewRequest("POST", ForeignLoggerHost, bytes.NewBuffer(jsonData))
-			if err != nil {
-				SendLogsToForeignLogger = false
-				l(LevelError, "Failed to create request to foreign logger: "+err.Error())
-			}
-
-			// set request headers
-			req.Header.Set("Content-Type", "application/json")
-
-			// send request
-			resp, err := client.Do(req)
-			if err != nil {
-				SendLogsToForeignLogger = false
-				l(LevelError, "Failed to send request to foreign logger: "+err.Error())
-			}
-
-			// close response body
-			err = resp.Body.Close()
-			if err != nil {
-				SendLogsToForeignLogger = false
-				l(LevelError, "Failed to close response body: "+err.Error())
-			}
-		} else {
-			log.Println("LOGGER: No foreign logger host set, cannot send logs to foreign logger.")
-		}
 	}
 
 	if level == LevelFatal {
