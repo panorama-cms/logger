@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -52,9 +51,6 @@ var SendLogsToForeignLogger = false
 
 // ForeignLoggerHost is the logger that is used if SendLogsToForeignLogger is set to true.
 var ForeignLoggerHost = ""
-
-// ForeignLoggerPort is the port of the logger that is used if SendLogsToForeignLogger is set to true.
-var ForeignLoggerPort = 0
 
 // init sets some default values by reading the environment variables.
 // The following environment variables are supported:
@@ -279,9 +275,6 @@ func l(level string, content string) {
 
 	if SendLogsToForeignLogger {
 		if ForeignLoggerHost != "" {
-			if ForeignLoggerPort == 0 {
-				ForeignLoggerPort = 80
-			}
 
 			// create http client
 			client := createHttpClient()
@@ -299,7 +292,7 @@ func l(level string, content string) {
 			}
 
 			// create request
-			req, err := http.NewRequest("POST", "https://"+ForeignLoggerHost+":"+strconv.Itoa(ForeignLoggerPort)+"/log", bytes.NewBuffer(jsonData))
+			req, err := http.NewRequest("POST", ForeignLoggerHost, bytes.NewBuffer(jsonData))
 			if err != nil {
 				SendLogsToForeignLogger = false
 				l(LevelError, "Failed to create request to foreign logger: "+err.Error())
